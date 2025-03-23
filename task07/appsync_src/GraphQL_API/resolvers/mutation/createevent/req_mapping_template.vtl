@@ -1,0 +1,18 @@
+#set($id = $util.autoId())
+#set($createdAt = $util.time.nowISO8601())
+
+{
+    "version": "2018-05-29",
+    "operation": "PutItem",
+    "key": {
+        "id": { "S": "$id" }
+    },
+    "attributeValues": {
+        "userId": { "N": "$context.arguments.userId" },
+        "createdAt": { "S": "$createdAt" },
+        "payLoad": { "S": "$util.toJson($context.arguments.payLoad)" }
+    },
+    "condition": {
+        "expression": "attribute_not_exists(id)"
+    }
+}
