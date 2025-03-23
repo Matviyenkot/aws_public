@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/aws_public.iml" filepath="$PROJECT_DIR$/.idea/aws_public.iml" />
+      <module fileurl="file://$PROJECT_DIR$/task08/task08.iml" filepath="$PROJECT_DIR$/task08/task08.iml" />
     </modules>
   </component>
 </project>
