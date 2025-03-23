@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.EVENTS_TABLE;
+const TABLE_NAME = process.env.event_table;
 
 exports.handler = async (event) => {
     console.log("Received event:", JSON.stringify(event, null, 2));
