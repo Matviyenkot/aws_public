@@ -1,9 +1,2 @@
-#if($ctx.error)
-    $util.error($ctx.error.message, $ctx.error.type)
-#end
-
-## Формуємо відповідь
-{
-    "id": "$ctx.result.id",
-    "createdAt": "$ctx.result.createdAt"
-}
+## Pass back the result from DynamoDB. **
+$util.toJson($ctx.result)

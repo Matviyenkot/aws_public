@@ -25,32 +25,13 @@
     "resource_type": "iam_policy",
     "tags": {}
   },
-  "Events": {
-    "resource_type": "dynamodb_table",
-    "hash_key_name": "id",
-    "hash_key_type": "S",
-    "read_capacity": 1,
-    "write_capacity": 1,
-    "global_indexes": [],
-    "autoscaling": [],
-    "tags": {}
-  },
-  "appsync_role": {
-    "resource_type": "iam_role",
-    "principal_service": "appsync",
-    "predefined_policies": ["AWSAppSyncInvokeFullAccess"],
+  "api_handler-role": {
+    "predefined_policies": [],
+    "principal_service": "lambda",
     "custom_policies": [
       "lambda-basic-execution"
     ],
-    "allowed_accounts": [],
-    "instance_profile": false,
-    "tags": {}
-  },
-  "appsync_logs_role": {
     "resource_type": "iam_role",
-    "principal_service": "appsync",
-    "predefined_policies": ["CloudWatchLogsFullAccess"],
     "tags": {}
   }
-
 }

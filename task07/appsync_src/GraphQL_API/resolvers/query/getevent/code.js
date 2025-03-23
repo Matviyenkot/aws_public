@@ -1,32 +1,27 @@
-const AWS = require("aws-sdk");
+import * as ddb from '@aws-appsync/utils/dynamodb';
+import { util } from '@aws-appsync/utils';
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.event_table;
-
-exports.handler = async (event) => {
-    console.log("Received event:", JSON.stringify(event, null, 2));
-
-    try {
-        const { id } = event.arguments; // Отримуємо id з GraphQL-запиту
-
-        if (!id) {
-            throw new Error("Missing event ID");
+export function request(ctx) {
+    return {
+        operation: "Query",
+        query: {
+            expression: 'PK = :pk and begins_with(SK, :sk)',
+            expressionValues: util.dynamodb.toMapValues({
+                ":pk": ctx.args.game_name,
+                ':sk': ctx.args.email
+            })
         }
-
-        const params = {
-            TableName: TABLE_NAME,
-            Key: { id },
-        };
-
-        const result = await dynamoDB.get(params).promise();
-
-        if (!result.Item) {
-            throw new Error(`Event with ID ${id} not found`);
-        }
-
-        return result.Item;
-    } catch (error) {
-        console.error("Error fetching event:", error);
-        throw new Error(error.message);
     }
-};
+}
+
+
+export function response(ctx) {
+    if (ctx.error) {
+        return util.error(ctx.error.message, ctx.error.type);
+    }
+    if (!ctx.result || !ctx.result.items || ctx.result.items.length === 0) {
+        return util.error("Player not found.", "NotFoundError");
+    }
+
+    return ctx.result.items[0];
+}
