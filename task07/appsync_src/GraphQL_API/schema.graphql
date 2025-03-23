@@ -6,7 +6,7 @@ type Event {
 }
 
 type Meta {
-  key1: Int   # Виправлено на Int
+  key1: Int
   key2: String
 }
 
@@ -15,7 +15,7 @@ type Payload {
 }
 
 type Mutation {
-  createEvent(userId: Int!, payLoad: Payload!): Event
+  createEvent(userId: Int!, payLoad: AWSJSON!): Event
 }
 
 type Query {
