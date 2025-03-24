@@ -65,6 +65,14 @@
            <artifactId>aws-lambda-java-events</artifactId>
            <version>3.11.0</version>
        </dependency>
+
+       <dependency>
+           <groupId>org.example</groupId>
+           <artifactId>weather-sdk</artifactId>
+           <version>1.0.0</version>
+           <scope>system</scope>
+           <systemPath>${project.basedir}/lib/weather-sdk-1.0.0.jar</systemPath>
+       </dependency>
     </dependencies>
 
     <build>

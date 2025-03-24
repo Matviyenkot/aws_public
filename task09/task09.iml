@@ -21,5 +21,14 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.15.0" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-lambda-java-events:3.11.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.6" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: org.example:weather-sdk:1.0.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/weather-sdk-1.0.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

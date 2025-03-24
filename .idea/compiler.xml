@@ -11,8 +11,10 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="sdk" target="1.5" />
       <module name="task08" target="11" />
       <module name="task09" target="11" />
+      <module name="weather-sdk" target="1.5" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
