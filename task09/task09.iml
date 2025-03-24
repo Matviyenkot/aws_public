@@ -19,5 +19,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.15.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.15.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.15.0" level="project" />
+    <orderEntry type="library" name="Maven: com.amazonaws:aws-lambda-java-events:3.11.0" level="project" />
+    <orderEntry type="library" name="Maven: joda-time:joda-time:2.6" level="project" />
   </component>
 </module>
