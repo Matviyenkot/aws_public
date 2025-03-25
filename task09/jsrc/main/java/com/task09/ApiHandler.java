@@ -2,8 +2,8 @@ package com.task09;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.lambda.LambdaLayer;
 import com.syndicate.deployment.annotations.lambda.LambdaUrlConfig;
@@ -17,6 +17,7 @@ import org.example.WeatherResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @LambdaHandler(
@@ -37,25 +38,33 @@ import java.util.Map;
 		runtime = DeploymentRuntime.JAVA11,
 		artifactExtension = ArtifactExtension.ZIP
 )
-public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class ApiHandler implements RequestHandler<Object, APIGatewayProxyResponseEvent> {
 
 	private final WeatherClient weatherClient = new WeatherClient();
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+
 
 	@Override
-	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
-		String path = request.getPath();
-		String method = request.getHttpMethod();
+	public APIGatewayProxyResponseEvent handleRequest(Object request, Context context) {
+
+		Map<String, String> data = getPathAndMethod(request);
+
+		String path = data.get("path");
+		String method = data.get("method");
 
 		if ("/weather".equals(path) && "GET".equalsIgnoreCase(method)) {
 			try {
 				WeatherResponse weatherResponse = weatherClient.getWeather();
-				return createResponse(200, weatherResponse.toJson());
+				Map<String, Object> responseMap = new HashMap<>();
+				responseMap.put("statusCode", 200);
+				responseMap.put("body", weatherResponse.toJson());
+				return createResponse(200, objectMapper.writeValueAsString(responseMap));
 			} catch (IOException e) {
 				return createResponse(500, "{\"error\": \"Failed to fetch weather data\"}");
 			}
 		} else {
 			String errorMessage = String.format(
-					"{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
+					"{\"statusCode\": 400, \"message\": \"Very Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
 					path, method);
 			return createResponse(400, errorMessage);
 		}
@@ -69,5 +78,32 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 				.withStatusCode(statusCode)
 				.withBody(body)
 				.withHeaders(headers);
+	}
+
+	private Map<String, String> getPathAndMethod(Object request) {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, String> result = new HashMap<>();
+
+		try {
+			// Конвертація JSON у мапу
+			Map<String, Object> data = objectMapper.convertValue(request, LinkedHashMap.class);
+
+			// Отримання requestContext
+			Map<String, Object> requestContext = (Map<String, Object>) data.get("requestContext");
+
+			// Отримання http
+			Map<String, Object> http = (Map<String, Object>) requestContext.get("http");
+
+			// Отримання path та method
+			String path = (String) http.get("path");
+			String method = (String) http.get("method");
+
+			result.put("path", path);
+			result.put("method", method);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
