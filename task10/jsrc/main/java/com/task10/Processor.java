@@ -22,6 +22,9 @@ import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
 import org.example.WeatherClient;
 import org.example.WeatherResponse;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -53,7 +56,8 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 	private final WeatherClient weatherClient = new WeatherClient();
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	private static final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
-	private static final DynamoDB dynamoDB = new DynamoDB(client);
+//	private static final DynamoDB dynamoDB = new DynamoDB(client);
+	private static final DynamoDbClient dynamoDB = DynamoDbClient.create();
 	private static final String TABLE_NAME = "Weather";
 
 	@Override
@@ -81,11 +85,18 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 	private void saveWeatherToDynamoDB(WeatherResponse weatherResponse) {
 		Segment segment = AWSXRay.beginSegment("SaveWeatherToDynamoDB");
 		try {
-			Table table = dynamoDB.getTable(TABLE_NAME);
-			Item item = new Item()
-					.withPrimaryKey("id", UUID.randomUUID().toString())
-					.withJSON("forecast", objectMapper.writeValueAsString(weatherResponse));
-			table.putItem(item);
+//			Table table = dynamoDB.getTable(TABLE_NAME);
+			Map<String, AttributeValue> itemMap = new HashMap<>();
+			itemMap.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
+			itemMap.put("forecast", AttributeValue.builder().s(objectMapper.writeValueAsString(weatherResponse)).build());
+			PutItemRequest putItemRequest = PutItemRequest.builder()
+					.tableName(System.getenv("table"))
+					.item(itemMap)
+					.build();
+//			Item item = new Item()
+//					.withPrimaryKey("id", UUID.randomUUID().toString())
+//					.withJSON("forecast", objectMapper.writeValueAsString(weatherResponse));
+			dynamoDB.putItem(putItemRequest);
 		} catch (Exception e) {
 			segment.addException(e);
 		} finally {
