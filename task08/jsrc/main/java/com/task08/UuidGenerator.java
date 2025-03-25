@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 		@EnvironmentVariable(key = "bucket", value = "${target_bucket}")})
 public class UuidGenerator implements RequestHandler<Object, String> {
 
-	private static final String BUCKET_NAME = System.getenv("bucket"); // 🔹 Вкажи свій S3 бакет
+	private static final String BUCKET_NAME = System.getenv("bucket");
 
 	@Override
 	public String handleRequest(Object input, Context context) {
