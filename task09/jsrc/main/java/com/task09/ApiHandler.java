@@ -64,7 +64,7 @@ public class ApiHandler implements RequestHandler<Object, APIGatewayProxyRespons
 			}
 		} else {
 			String errorMessage = String.format(
-					"{\"statusCode\": 400, \"message\": \"Very Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
+					"{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
 					path, method);
 			return createResponse(400, errorMessage);
 		}
