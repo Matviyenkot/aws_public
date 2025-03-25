@@ -55,10 +55,10 @@ public class ApiHandler implements RequestHandler<Object, APIGatewayProxyRespons
 		if ("/weather".equals(path) && "GET".equalsIgnoreCase(method)) {
 			try {
 				WeatherResponse weatherResponse = weatherClient.getWeather();
-				Map<String, Object> responseMap = new HashMap<>();
-				responseMap.put("statusCode", 200);
-				responseMap.put("body", weatherResponse.toJson());
-				return createResponse(200, objectMapper.writeValueAsString(responseMap));
+//				Map<String, Object> responseMap = new HashMap<>();
+//				responseMap.put("statusCode", 200);
+//				responseMap.put("body", weatherResponse.toJson());
+				return createResponse(200, weatherResponse.toJson());
 			} catch (IOException e) {
 				return createResponse(500, "{\"error\": \"Failed to fetch weather data\"}");
 			}
