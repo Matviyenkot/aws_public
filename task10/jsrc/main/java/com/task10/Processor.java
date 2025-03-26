@@ -11,6 +11,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.entities.Segment;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
+import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.lambda.LambdaLayer;
 import com.syndicate.deployment.annotations.lambda.LambdaUrlConfig;
@@ -51,6 +53,9 @@ import java.util.UUID;
 		runtime = DeploymentRuntime.JAVA11,
 		artifactExtension = ArtifactExtension.ZIP
 )
+@EnvironmentVariables(value = {
+		@EnvironmentVariable(key = "region", value = "${region}"),
+		@EnvironmentVariable(key = "table", value = "${target_table}")})
 public class Processor implements RequestHandler<Object, APIGatewayProxyResponseEvent> {
 
 	private final WeatherClient weatherClient = new WeatherClient();
