@@ -1,2 +1,4 @@
-## Pass back the result from DynamoDB. **
-$util.toJson($ctx.result)
+ $util.toJson({
+                 "id": "$ctx.stash.id",
+                 "createdAt": "$ctx.stash.createdAt"
+               })

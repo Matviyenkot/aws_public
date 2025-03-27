@@ -38,12 +38,13 @@
   "appsync_role": {
     "resource_type": "iam_role",
     "principal_service": "appsync",
-    "predefined_policies": ["AWSAppSyncInvokeFullAccess"],
+    "predefined_policies": [],
     "custom_policies": [
       "lambda-basic-execution"
     ],
     "allowed_accounts": [],
     "instance_profile": false,
+    "permissions_boundary": "",
     "tags": {}
   },
   "appsync_logs_role": {
