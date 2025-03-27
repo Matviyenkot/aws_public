@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @LambdaHandler(
     lambdaName = "processor",
@@ -93,7 +94,7 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 //			Table table = dynamoDB.getTable(TABLE_NAME);
 			Map<String, AttributeValue> itemMap = new HashMap<>();
 			itemMap.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
-			itemMap.put("forecast", AttributeValue.builder().s(objectMapper.writeValueAsString(weatherResponse)).build());
+			itemMap.put("forecast", AttributeValue.builder().s(objectMapper.writeValueAsString(weatherResponse.toJson())).build());
 			PutItemRequest putItemRequest = PutItemRequest.builder()
 					.tableName(System.getenv("table"))
 					.item(itemMap)
