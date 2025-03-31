@@ -10,6 +10,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.entities.Segment;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
@@ -29,8 +30,10 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -87,10 +90,27 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 	private void saveWeatherToDynamoDB(WeatherResponse weatherResponse) {
 		Segment segment = AWSXRay.beginSegment("SaveWeatherToDynamoDB");
 		try {
-//			Table table = dynamoDB.getTable(TABLE_NAME);
+
 			Map<String, AttributeValue> itemMap = new HashMap<>();
 			itemMap.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
-			itemMap.put("forecast", AttributeValue.builder().s(weatherResponse.toJson()).build());
+
+			JsonNode forecastJson = objectMapper.readTree(weatherResponse.toJson());
+			Map<String, AttributeValue> forecastMap = parseForecastJson(forecastJson);
+
+			// Add the forecast map to the item map
+//			itemMap.put("forecast", AttributeValue.builder().m(forecastMap).build());
+
+//			itemMap.put("forecast", AttributeValue.builder().s(weatherResponse.toJson()).build());
+
+			Map<String, Object> body = objectMapper.readValue(weatherResponse.toJson(), LinkedHashMap.class);
+			itemMap.put("forecast", AttributeValue.builder().m(
+					body.entrySet().stream()
+							.collect(Collectors.toMap(
+									Map.Entry::getKey,
+									e -> AttributeValue.builder().s(String.valueOf(e.getValue())).build()
+							))
+			).build());
+
 			PutItemRequest putItemRequest = PutItemRequest.builder()
 					.tableName(System.getenv("table"))
 					.item(itemMap)
@@ -104,6 +124,48 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 		} finally {
 			AWSXRay.endSegment();
 		}
+	}
+
+	private Map<String, AttributeValue> parseForecastJson(JsonNode forecastJson) {
+		Map<String, AttributeValue> forecastMap = new HashMap<>();
+
+		// Top-level attributes
+		forecastMap.put("elevation", AttributeValue.builder().n(forecastJson.get("elevation").asText()).build());
+		forecastMap.put("generationtime_ms", AttributeValue.builder().n(forecastJson.get("generationtime_ms").asText()).build());
+		forecastMap.put("latitude", AttributeValue.builder().n(forecastJson.get("latitude").asText()).build());
+		forecastMap.put("longitude", AttributeValue.builder().n(forecastJson.get("longitude").asText()).build());
+		forecastMap.put("timezone", AttributeValue.builder().s(forecastJson.get("timezone").asText()).build());
+		forecastMap.put("timezone_abbreviation", AttributeValue.builder().s(forecastJson.get("timezone_abbreviation").asText()).build());
+		forecastMap.put("utc_offset_seconds", AttributeValue.builder().n(forecastJson.get("utc_offset_seconds").asText()).build());
+
+		// Hourly units
+		Map<String, AttributeValue> hourlyUnitsMap = new HashMap<>();
+		JsonNode hourlyUnitsJson = forecastJson.get("hourly_units");
+		hourlyUnitsMap.put("temperature_2m", AttributeValue.builder().s(hourlyUnitsJson.get("temperature_2m").asText()).build());
+		hourlyUnitsMap.put("time", AttributeValue.builder().s(hourlyUnitsJson.get("time").asText()).build());
+		forecastMap.put("hourly_units", AttributeValue.builder().m(hourlyUnitsMap).build());
+
+		// Hourly data
+		Map<String, AttributeValue> hourlyMap = new HashMap<>();
+		JsonNode hourlyJson = forecastJson.get("hourly");
+
+		// Convert temperature_2m array into a DynamoDB list
+		List<AttributeValue> temperatureList = new ArrayList<>();
+		for (JsonNode tempNode : hourlyJson.get("temperature_2m")) {
+			temperatureList.add(AttributeValue.builder().n(tempNode.asText()).build());
+		}
+		hourlyMap.put("temperature_2m", AttributeValue.builder().l(temperatureList).build());
+
+		// Convert time array into a DynamoDB list
+		List<AttributeValue> timeList = new ArrayList<>();
+		for (JsonNode timeNode : hourlyJson.get("time")) {
+			timeList.add(AttributeValue.builder().s(timeNode.asText()).build());
+		}
+		hourlyMap.put("time", AttributeValue.builder().l(timeList).build());
+
+		forecastMap.put("hourly", AttributeValue.builder().m(hourlyMap).build());
+
+		return forecastMap;
 	}
 
 	private APIGatewayProxyResponseEvent createResponse(int statusCode, String body) {
