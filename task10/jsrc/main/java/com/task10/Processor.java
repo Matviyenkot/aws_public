@@ -71,16 +71,12 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 		Segment segment = AWSXRay.beginSegment("HandleWeatherRequest");
 		try {
 			Map<String, String> data = getPathAndMethod(request);
-			String path = data.get("path");
-			String method = data.get("method");
+//			String path = data.get("path");
+//			String method = data.get("method");
 
-			if ("/weather".equals(path) && "GET".equalsIgnoreCase(method)) {
-				WeatherResponse weatherResponse = weatherClient.getWeather();
-				saveWeatherToDynamoDB(weatherResponse);
-				return createResponse(200, weatherResponse.toJson());
-			} else {
-				return createResponse(400, "{\"error\": \"Bad request\"}");
-			}
+			WeatherResponse weatherResponse = weatherClient.getWeather();
+			saveWeatherToDynamoDB(weatherResponse);
+			return createResponse(200, weatherResponse.toJson());
 		} catch (IOException e) {
 			return createResponse(500, "{\"error\": \"Failed to fetch weather data\"}");
 		} finally {
