@@ -1,42 +1,40 @@
 package com.task10;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.amazonaws.xray.AWSXRay;
-import com.amazonaws.xray.entities.Segment;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.lambda.LambdaLayer;
 import com.syndicate.deployment.annotations.lambda.LambdaUrlConfig;
+import com.syndicate.deployment.annotations.resources.DependsOn;
 import com.syndicate.deployment.model.ArtifactExtension;
 import com.syndicate.deployment.model.DeploymentRuntime;
+import com.syndicate.deployment.model.ResourceType;
 import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.model.TracingMode;
 import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
-import org.example.WeatherClient;
-import org.example.WeatherResponse;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 
 @LambdaHandler(
     lambdaName = "processor",
@@ -60,155 +58,86 @@ import java.util.stream.Collectors;
 @EnvironmentVariables(value = {
 		@EnvironmentVariable(key = "region", value = "${region}"),
 		@EnvironmentVariable(key = "table", value = "${target_table}")})
-public class Processor implements RequestHandler<Object, APIGatewayProxyResponseEvent> {
+public class Processor implements RequestHandler<Object, Map<String, Object>> {
 
-	private final WeatherClient weatherClient = new WeatherClient();
-	private static final ObjectMapper objectMapper = new ObjectMapper();
-	private static final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
-//	private static final DynamoDB dynamoDB = new DynamoDB(client);
-	private static final DynamoDbClient dynamoDB = DynamoDbClient.create();
-	private static final String TABLE_NAME = "Weather";
+	private static final String URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
+	private final DynamoDbClient db = DynamoDbClient.builder()
+			.credentialsProvider(DefaultCredentialsProvider.create())
+			.region(Region.EU_WEST_1)
+			.build();
 
-	@Override
-	public APIGatewayProxyResponseEvent handleRequest(Object request, Context context) {
-		Segment segment = AWSXRay.beginSegment("HandleWeatherRequest");
+	public Map<String, Object> handleRequest(Object request, Context context) {
+		LambdaLogger log = context.getLogger();
+		Map<String, Object> result = new HashMap<>();
 		try {
-			Map<String, String> data = getPathAndMethod(request);
-//			String path = data.get("path");
-//			String method = data.get("method");
+			String weatherRaw = getWeatherData();
+			JSONObject weatherJSON = new JSONObject(weatherRaw);
+			storeWeatherData(weatherJSON);
 
-			WeatherResponse weatherResponse = weatherClient.getWeather();
-			saveWeatherToDynamoDB(weatherResponse);
-			return createResponse(200, weatherResponse.toJson());
+			result.put("statusCode", 200);
+			result.put("message", "ALL DONE");
 		} catch (IOException e) {
-			return createResponse(500, "{\"error\": \"Failed to fetch weather data\"}");
-		} finally {
-			AWSXRay.endSegment();
-		}
-	}
-
-	private void saveWeatherToDynamoDB(WeatherResponse weatherResponse) {
-		Segment segment = AWSXRay.beginSegment("SaveWeatherToDynamoDB");
-		try {
-
-			Map<String, AttributeValue> itemMap = new HashMap<>();
-			itemMap.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
-
-			Map<String, Object> body = objectMapper.readValue(weatherResponse.toJson(), LinkedHashMap.class);
-			itemMap.put("forecast", AttributeValue.builder().m(
-					body.entrySet().stream()
-							.filter(entry -> List.of(
-									"elevation",
-									"generationtime_ms",
-									"hourly",
-									"hourly_units",
-									"latitude",
-									"longitude",
-									"timezone",
-									"timezone_abbreviation",
-									"utc_offset_seconds"
-							).contains(entry.getKey()))
-							.collect(Collectors.toMap(
-									Map.Entry::getKey,
-									e -> convertToAttributeValue(e.getKey(), e.getValue())
-							))
-			).build());
-
-			PutItemRequest putItemRequest = PutItemRequest.builder()
-					.tableName(System.getenv("table"))
-					.item(itemMap)
-					.build();
-//			Item item = new Item()
-//					.withPrimaryKey("id", UUID.randomUUID().toString())
-//					.withJSON("forecast", objectMapper.writeValueAsString(weatherResponse));
-			dynamoDB.putItem(putItemRequest);
-		} catch (Exception e) {
-			segment.addException(e);
-		} finally {
-			AWSXRay.endSegment();
-		}
-	}
-
-	private AttributeValue convertToAttributeValue(String key, Object value) {
-		// Dynamic type handling based on key and value type
-		switch (key) {
-			case "elevation":
-			case "generationtime_ms":
-			case "latitude":
-			case "longitude":
-			case "utc_offset_seconds":
-				// Convert numeric values to Number Attribute
-				return AttributeValue.builder().n(String.valueOf(value)).build();
-			case "timezone":
-			case "timezone_abbreviation":
-				// Convert string values to String Attribute
-				return AttributeValue.builder().s(String.valueOf(value)).build();
-			case "hourly":
-			case "hourly_units":
-				// Handle nested objects (maps or lists)
-				if (value instanceof Map) {
-					Map<String, Object> nestedMap = (Map<String, Object>) value;
-					return AttributeValue.builder()
-							.m(nestedMap.entrySet().stream()
-									.collect(Collectors.toMap(
-											Map.Entry::getKey,
-											e -> convertToAttributeValue(e.getKey(), e.getValue())
-									))).build();
-				} else if (value instanceof List) {
-					return AttributeValue.builder().l(
-							((List<Object>) value).stream()
-									.map(v -> convertToAttributeValue("", v)) // Handle list elements
-									.collect(Collectors.toList())
-					).build();
-				}
-				throw new IllegalArgumentException(key + " expects a nested structure (map or list).");
-			default:
-				// Handle individual list items
-				if (value instanceof Number) {
-					return AttributeValue.builder().n(String.valueOf(value)).build();
-				} else if (value instanceof String) {
-					return AttributeValue.builder().s((String) value).build();
-				} else if (value instanceof List) {
-					return AttributeValue.builder()
-							.l(((List<Object>) value).stream()
-									.map(v -> convertToAttributeValue("", v))
-									.collect(Collectors.toList()))
-							.build();
-				} else {
-					throw new IllegalArgumentException("Unsupported type for key: " + key);
-				}
-		}
-	}
-
-
-	private APIGatewayProxyResponseEvent createResponse(int statusCode, String body) {
-		Map<String, String> headers = new HashMap<>();
-		headers.put("content-type", "application/json");
-
-		return new APIGatewayProxyResponseEvent()
-				.withStatusCode(statusCode)
-				.withBody(body)
-				.withHeaders(headers);
-	}
-
-	private Map<String, String> getPathAndMethod(Object request) {
-
-		ObjectMapper objectMapper = new ObjectMapper();
-		Map<String, String> result = new HashMap<>();
-
-		try {
-			Map<String, Object> data = objectMapper.convertValue(request, LinkedHashMap.class);
-			Map<String, Object> requestContext = (Map<String, Object>) data.get("requestContext");
-			Map<String, Object> http = (Map<String, Object>) requestContext.get("http");
-
-			String path = (String) http.get("path");
-			String method = (String) http.get("method");
-
-			result.put("path", path);
-			result.put("method", method);
-		} catch (Exception e) {
-			e.printStackTrace();
+			log.log("Not able to get data from the Weather service:" + e.getMessage());
+			result.put("statusCode", 500);
+			result.put("error", "Not able to get data from the Weather service:" + e.getMessage());
+		} catch (DynamoDbException e) {
+			log.log("Not able to store data to DB:" + e.getMessage());
+			result.put("statusCode", 500);
+			result.put("error", "ot able to store data to DB:" + e.getMessage());
 		}
 		return result;
+	}
+
+	private String getWeatherData() throws IOException {
+		try (CloseableHttpClient http = HttpClients.createDefault()) {
+			HttpGet request = new HttpGet(URL);
+			HttpResponse response = http.execute(request);
+			return EntityUtils.toString(response.getEntity());
+		}
+	}
+
+	private void storeWeatherData(JSONObject jsonObject) throws DynamoDbException {
+		Map<String, AttributeValue> itemValues = new HashMap<>();
+		itemValues.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
+		JSONObject hourlyJson = jsonObject.getJSONObject("hourly");
+		Map<String, AttributeValue> hourlyMap = new HashMap<>();
+		hourlyMap.put("time", AttributeValue.builder().l(
+				hourlyJson.getJSONArray("time").toList().stream()
+						.map(times -> AttributeValue.builder().s(times.toString()).build())
+						.collect(Collectors.toList())
+		).build());
+		hourlyMap.put("temperature_2m", AttributeValue.builder().l(
+				hourlyJson.getJSONArray("temperature_2m").toList().stream()
+						.map(temp -> AttributeValue.builder().n(temp.toString()).build())
+						.collect(Collectors.toList())
+		).build());
+
+		JSONObject hourlyUnitsJson = jsonObject.getJSONObject("hourly_units");
+		Map<String, AttributeValue> hourlyUnitsMap = new HashMap<>();
+		hourlyUnitsMap.put("time", AttributeValue.builder().s(hourlyUnitsJson.getString("time")).build());
+		hourlyUnitsMap.put("temperature_2m", AttributeValue.builder().s(hourlyUnitsJson.getString("temperature_2m")).build());
+
+		Map<String, AttributeValue> forecastMap = new HashMap<>();
+		forecastMap.put("elevation", AttributeValue.builder().n(String.valueOf(jsonObject.getDouble("elevation"))).build());
+		forecastMap.put("generationtime_ms", AttributeValue.builder().n(String.valueOf(jsonObject.getDouble("generationtime_ms"))).build());
+		forecastMap.put("latitude", AttributeValue.builder().n(String.valueOf(jsonObject.getDouble("latitude"))).build());
+		forecastMap.put("longitude", AttributeValue.builder().n(String.valueOf(jsonObject.getDouble("longitude"))).build());
+		forecastMap.put("timezone", AttributeValue.builder().s(jsonObject.getString("timezone")).build());
+		forecastMap.put("timezone_abbreviation", AttributeValue.builder().s(jsonObject.getString("timezone_abbreviation")).build());
+		forecastMap.put("utc_offset_seconds", AttributeValue.builder().n(String.valueOf(jsonObject.getInt("utc_offset_seconds"))).build());
+		forecastMap.put("hourly", AttributeValue.builder().m(hourlyMap).build());
+		forecastMap.put("hourly_units", AttributeValue.builder().m(hourlyUnitsMap).build());
+
+		itemValues.put("forecast", AttributeValue.builder().m(forecastMap).build());
+		String tableName = System.getenv("table");
+		if (tableName == null) {
+			throw new IllegalStateException("Table name environment variable 'table' is not set");
+		}
+		PutItemRequest request = PutItemRequest.builder()
+				.tableName(tableName)
+				.item(itemValues)
+				.build();
+		db.putItem(request);
+		System.out.println("Item inserted successfully!");
 	}
 }

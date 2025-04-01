@@ -32,6 +32,7 @@
     </orderEntry>
     <orderEntry type="library" name="Maven: com.amazonaws:aws-xray-recorder-sdk-core:2.18.2" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-java-sdk-xray:1.12.767" level="project" />
+    <orderEntry type="library" name="Maven: org.json:json:20240303" level="project" />
     <orderEntry type="library" name="Maven: software.amazon.awssdk:dynamodb:2.30.35" level="project" />
     <orderEntry type="library" name="Maven: software.amazon.awssdk:aws-json-protocol:2.30.35" level="project" />
     <orderEntry type="library" name="Maven: software.amazon.awssdk:third-party-jackson-core:2.30.35" level="project" />
