@@ -110,7 +110,7 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 							).contains(entry.getKey()))
 							.collect(Collectors.toMap(
 									Map.Entry::getKey,
-									e -> AttributeValue.builder().s(String.valueOf(e.getValue())).build()
+									e -> convertToAttributeValue(e.getKey(), e.getValue())
 							))
 			).build());
 
@@ -126,6 +126,57 @@ public class Processor implements RequestHandler<Object, APIGatewayProxyResponse
 			segment.addException(e);
 		} finally {
 			AWSXRay.endSegment();
+		}
+	}
+
+	private AttributeValue convertToAttributeValue(String key, Object value) {
+		// Dynamic type handling based on key and value type
+		switch (key) {
+			case "elevation":
+			case "generationtime_ms":
+			case "latitude":
+			case "longitude":
+			case "utc_offset_seconds":
+				// Convert numeric values to Number Attribute
+				return AttributeValue.builder().n(String.valueOf(value)).build();
+			case "timezone":
+			case "timezone_abbreviation":
+				// Convert string values to String Attribute
+				return AttributeValue.builder().s(String.valueOf(value)).build();
+			case "hourly":
+			case "hourly_units":
+				// Handle nested objects (maps or lists)
+				if (value instanceof Map) {
+					Map<String, Object> nestedMap = (Map<String, Object>) value;
+					return AttributeValue.builder()
+							.m(nestedMap.entrySet().stream()
+									.collect(Collectors.toMap(
+											Map.Entry::getKey,
+											e -> convertToAttributeValue(e.getKey(), e.getValue())
+									))).build();
+				} else if (value instanceof List) {
+					return AttributeValue.builder().l(
+							((List<Object>) value).stream()
+									.map(v -> convertToAttributeValue("", v)) // Handle list elements
+									.collect(Collectors.toList())
+					).build();
+				}
+				throw new IllegalArgumentException(key + " expects a nested structure (map or list).");
+			default:
+				// Handle individual list items
+				if (value instanceof Number) {
+					return AttributeValue.builder().n(String.valueOf(value)).build();
+				} else if (value instanceof String) {
+					return AttributeValue.builder().s((String) value).build();
+				} else if (value instanceof List) {
+					return AttributeValue.builder()
+							.l(((List<Object>) value).stream()
+									.map(v -> convertToAttributeValue("", v))
+									.collect(Collectors.toList()))
+							.build();
+				} else {
+					throw new IllegalArgumentException("Unsupported type for key: " + key);
+				}
 		}
 	}
 
