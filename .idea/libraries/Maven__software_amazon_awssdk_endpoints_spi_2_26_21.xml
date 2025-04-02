@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: software.amazon.awssdk:endpoints-spi:2.26.21">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/software/amazon/awssdk/endpoints-spi/2.26.21/endpoints-spi-2.26.21.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/software/amazon/awssdk/endpoints-spi/2.26.21/endpoints-spi-2.26.21-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/software/amazon/awssdk/endpoints-spi/2.26.21/endpoints-spi-2.26.21-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

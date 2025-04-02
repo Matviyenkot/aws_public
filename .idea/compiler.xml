@@ -9,6 +9,7 @@
         <module name="task09" />
         <module name="task10" />
         <module name="task08" />
+        <module name="task11" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -16,6 +17,7 @@
       <module name="task08" target="11" />
       <module name="task09" target="11" />
       <module name="task10" target="11" />
+      <module name="task11" target="11" />
       <module name="weather-sdk" target="1.5" />
     </bytecodeTargetLevel>
   </component>
