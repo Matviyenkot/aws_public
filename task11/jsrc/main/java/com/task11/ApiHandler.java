@@ -153,6 +153,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 					.forceAliasCreation(Boolean.FALSE)
 					.build());
 
+			context.getLogger().log("AdminCreateUserRequest response: " + response.toString());
+
 
 			AdminSetUserPasswordResponse adminSetUserPasswordResponse =	cognitoClient.adminSetUserPassword(AdminSetUserPasswordRequest.builder()
 					.userPoolId(userPoolId)
@@ -169,7 +171,7 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 			return createResponse(200, null);
 		} catch (Exception e) {
-			context.getLogger().log("Error during sign-up" + e.getMessage());
+			context.getLogger().log("Error during sign-up " + e.getMessage());
 			return createResponse(400, "Error during sign-up: " + e.getMessage());
 		}
 	}
