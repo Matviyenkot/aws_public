@@ -1,0 +1,10 @@
+<script>
+    window.onload = function() {
+        SwaggerUIBundle({
+            url: "./oas_v3.json",  // ensures the Swagger UI loads your specification file
+            dom_id: '#swagger-ui',
+            presets: [SwaggerUIBundle.presets.apis],
+            layout: "BaseLayout"
+        });
+    };
+</script>

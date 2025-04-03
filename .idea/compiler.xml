@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="task09" />
+        <module name="task12" />
         <module name="task10" />
         <module name="task08" />
         <module name="task11" />
@@ -18,6 +19,8 @@
       <module name="task09" target="11" />
       <module name="task10" target="11" />
       <module name="task11" target="11" />
+      <module name="task11 (1)" target="11" />
+      <module name="task12" target="11" />
       <module name="weather-sdk" target="1.5" />
     </bytecodeTargetLevel>
   </component>
