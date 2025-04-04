@@ -75,7 +75,7 @@
   "${tables_table}": {
     "resource_type": "dynamodb_table",
     "hash_key_name": "id",
-    "hash_key_type": "N",
+    "hash_key_type": "S",
     "read_capacity": 5,
     "write_capacity": 5,
     "global_indexes": [
@@ -154,5 +154,16 @@
     ],
     "resource_type": "iam_role",
     "tags": {}
+  },
+  "swagger-ui-resource": {
+    "resource_type": "swagger_ui",
+    "swagger_ui_config": {
+      "bucket": "task12_api_ui",
+      "oas_file": "oas_v3.json",
+      "static_files_source": "./swagger-ui-files/"
+    },
+    "tags": {
+      "Purpose": "Task 12 Swagger UI Resource"
+    }
   }
 }
