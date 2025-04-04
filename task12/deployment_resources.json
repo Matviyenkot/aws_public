@@ -159,7 +159,7 @@
     "resource_type": "swagger_ui",
     "swagger_ui_config": {
       "bucket": "task12_api_ui",
-      "oas_file": "oas_v3.json",
+      "oas_file": "kz5byarecc_oas_v3.json",
       "static_files_source": "./swagger-ui-files/"
     },
     "tags": {
