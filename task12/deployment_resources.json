@@ -23,7 +23,7 @@
             "cognito-idp:ListUserPoolClients",
             "cognito-idp:AdminRespondToAuthChallenge",
             "cognito-idp:AdminConfirmSignUp",
-            "cognito-idp:*"
+            "cognito-idp:AdminSetUserPassword"
           ],
           "Effect": "Allow",
           "Resource": "*"
@@ -34,32 +34,28 @@
     "resource_type": "iam_policy",
     "tags": {}
   },
-  "${booking_userpool}": {
+  "api_handler-role": {
+    "predefined_policies": [],
+    "principal_service": "lambda",
+    "custom_policies": [
+      "lambda-basic-execution"
+    ],
+    "resource_type": "iam_role",
+    "tags": {}
+  },
+  "simple-booking-userpool": {
     "resource_type": "cognito_idp",
     "password_policy": {
-      "minimum_length": 12,
+      "minimum_length": 8,
       "require_uppercase": true,
       "require_symbols": true,
       "require_lowercase": true,
       "require_numbers": true
     },
-    "auto_verified_attributes": [
-      "email"
-    ],
+    "auto_verified_attributes": [],
     "sms_configuration": {},
-    "username_attributes": [
-      "email"
-    ],
-    "custom_attributes": [
-      {
-        "name": "lastName",
-        "type": "String"
-      },
-      {
-        "name": "firstName",
-        "type": "String"
-      }
-    ],
+    "username_attributes": [],
+    "custom_attributes": [],
     "client": {
       "client_name": "client-app",
       "generate_secret": false,
@@ -72,95 +68,63 @@
     },
     "tags": {}
   },
-  "${tables_table}": {
+  "Tables": {
     "resource_type": "dynamodb_table",
     "hash_key_name": "id",
     "hash_key_type": "S",
-    "read_capacity": 5,
-    "write_capacity": 5,
-    "global_indexes": [
-      {
-        "name": "TableNumberIndex",
-        "index_key_name": "number",
-        "index_key_type": "N"
-      }
-    ],
+    "read_capacity": 1,
+    "write_capacity": 1,
+    "global_indexes": [],
     "autoscaling": [],
     "tags": {}
   },
-  "${reservations_table}": {
+  "Reservations": {
     "resource_type": "dynamodb_table",
     "hash_key_name": "id",
     "hash_key_type": "S",
-    "read_capacity": 5,
-    "write_capacity": 5,
-    "global_indexes": [
-      {
-        "name": "TableDateTimeIndex",
-        "index_key_name": "tableNumber",
-        "index_key_type": "N",
-        "index_sort_key_name": "date",
-        "index_sort_key_type": "S"
-      }
-    ],
+    "read_capacity": 1,
+    "write_capacity": 1,
+    "global_indexes": [],
     "autoscaling": [],
     "tags": {}
   },
-  "api-ui-hoster": {
+  "swagger-ui-bucket": {
     "resource_type": "s3_bucket",
-    "acl": "private",
-    "cors": [],
-    "policy": {
+    "bucket_name": "task12_api_ui",
+    "website_configuration": {
+      "index_document": "index.html",
+      "error_document": "error.html"
+    },
+    "tags": {
+      "Purpose": "Swagger UI Hosting"
+    },
+    "policy_content": {
       "Version": "2012-10-17",
       "Statement": [
         {
-          "Sid": "WebSiteHostingGetObject",
           "Effect": "Allow",
           "Principal": "*",
-          "Action": [
-            "s3:GetObject"
-          ],
-          "Resource": [
-            "arn:aws:s3:::api-ui-hoster/*"
-          ],
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::task12_api_ui/*",
           "Condition": {
             "IpAddress": {
-              "aws:SourceIp": [
-                "18.197.177.98/32"
-              ]
+              "aws:SourceIp": ["18.197.177.98/32", "5.58.101.147/32"]
             }
           }
         }
       ]
-    },
-    "public_access_block": {
-      "block_public_acls": true,
-      "ignore_public_acls": true,
-      "block_public_policy": true,
-      "restrict_public_buckets": true
-    },
-    "tags": {},
-    "website_hosting": {
-      "enabled": true,
-      "index_document": "index.html",
-      "error_document": "error.html"
     }
-  },
-  "api_handler-role": {
-    "predefined_policies": [],
-    "principal_service": "lambda",
-    "custom_policies": [
-      "lambda-basic-execution"
-    ],
-    "resource_type": "iam_role",
-    "tags": {}
   },
   "swagger-ui-resource": {
     "resource_type": "swagger_ui",
     "swagger_ui_config": {
       "bucket": "task12_api_ui",
-      "oas_file": "kz5byarecc_oas_v3.json",
-      "static_files_source": "./swagger-ui-files/"
+      "oas_file": "oas_v3.json",
+      "static_files_source": "./swagger-ui-files/",
+      "deployment_package": {
+        "build_tool": "local",
+        "source_path": "./swagger-ui-files/"
+      }
     },
     "tags": {
       "Purpose": "Task 12 Swagger UI Resource"
