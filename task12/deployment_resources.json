@@ -145,21 +145,5 @@
       "index_document": "index.html",
       "error_document": "error.html"
     }
-  },
-
-  "swagger-ui-resource": {
-    "resource_type": "swagger_ui",
-    "swagger_ui_config": {
-      "bucket": "task12_api_ui",
-      "oas_file": "kz5byarecc_oas_v3.json",
-      "static_files_source": "./swagger-ui-files/",
-      "deployment_package": {
-        "build_tool": "local",
-        "source_path": "./swagger-ui-files/"
-      }
-    },
-    "tags": {
-      "Purpose": "Task 12 Swagger UI Resource"
-    }
   }
 }
