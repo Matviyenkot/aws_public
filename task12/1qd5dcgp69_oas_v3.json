@@ -662,9 +662,44 @@
   },
   "components": {
     "schemas": {
-      "Empty": {
-        "title": "Empty Schema",
-        "type": "object"
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "tableId": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          }
+        }
+      },
+      "Table": {
+        "type": "object",
+        "properties": {
+          "tableId": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          }
+        }
       }
     },
     "securitySchemes": {
