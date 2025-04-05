@@ -17,9 +17,11 @@
   "paths": {
     "/reservations": {
       "get": {
+        "summary": "Get all reservations",
+        "description": "Retrieves a list of all reservations.",
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "List of reservations retrieved successfully",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -30,7 +32,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Empty"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
@@ -38,7 +40,7 @@
         },
         "security": [
           {
-            "authorizer": []
+            "task11_authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -57,9 +59,21 @@
         }
       },
       "post": {
+        "summary": "Create a reservation",
+        "description": "Creates a new reservation for a table.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reservation"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "Reservation successfully created",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -70,7 +84,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Empty"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
@@ -78,7 +92,7 @@
         },
         "security": [
           {
-            "authorizer": []
+            "task11_authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -97,9 +111,11 @@
         }
       },
       "options": {
+        "summary": "CORS setup",
+        "description": "Handles CORS preflight requests.",
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "CORS preflight successful.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -147,9 +163,11 @@
     },
     "/tables": {
       "get": {
+        "summary": "Get list of tables",
+        "description": "Retrieves a list of available tables.",
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "Successful response with list of tables.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -160,7 +178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Empty"
+                  "$ref": "#/components/schemas/Table"
                 }
               }
             }
@@ -168,7 +186,7 @@
         },
         "security": [
           {
-            "authorizer": []
+            "task11_authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -187,9 +205,21 @@
         }
       },
       "post": {
+        "summary": "Create a new table",
+        "description": "Adds a new table to the system.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Table"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "Table successfully created.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -200,7 +230,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Empty"
+                  "$ref": "#/components/schemas/Table"
                 }
               }
             }
@@ -208,7 +238,7 @@
         },
         "security": [
           {
-            "authorizer": []
+            "task11_authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -227,9 +257,11 @@
         }
       },
       "options": {
+        "summary": "CORS setup",
+        "description": "Handles CORS preflight requests for tables.",
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "CORS preflight successful.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -277,9 +309,38 @@
     },
     "/signin": {
       "post": {
+        "summary": "User signin",
+        "description": "Authenticates a user and returns an ID token for authorization.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "The email of the user.",
+                    "format": "email",
+                    "example": "john.doe@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "The password of the account.",
+                    "example": "password123"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "Sign-in successful.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -312,94 +373,11 @@
         }
       },
       "options": {
+        "summary": "CORS Preflight Request",
+        "description": "Handles CORS preflight requests for the /signin endpoint, allowing cross-origin access.",
         "responses": {
           "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Empty"
-                }
-              }
-            }
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{\"statusCode\": 200}"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        }
-      }
-    },
-    "/signup": {
-      "post": {
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Empty"
-                }
-              }
-            }
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:423623856894:function:api_handler/invocations",
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        }
-      },
-      "options": {
-        "responses": {
-          "200": {
-            "description": "200 response",
+            "description": "CORS headers successfully returned.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -447,6 +425,8 @@
     },
     "/tables/{tableId}": {
       "get": {
+        "summary": "Get table by ID",
+        "description": "Retrieves details of a specific table by ID.",
         "parameters": [
           {
             "name": "tableId",
@@ -459,7 +439,7 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "Table details retrieved successfully",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -478,7 +458,7 @@
         },
         "security": [
           {
-            "authorizer": []
+            "task11_authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -497,6 +477,8 @@
         }
       },
       "options": {
+        "summary": "CORS Preflight Request",
+        "description": "Handles CORS preflight requests for endpoints that require a table ID in the path parameter, allowing cross-origin access.",
         "parameters": [
           {
             "name": "tableId",
@@ -509,7 +491,129 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response",
+            "description": "CORS headers successfully returned.",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "summary": "User signup",
+        "description": "Registers a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "The username of the user.",
+                    "example": "john_doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email address of the user.",
+                    "format": "email",
+                    "example": "john.doe@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "The password of the user account.",
+                    "example": "password123"
+                  }
+                },
+                "required": [
+                  "username",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign-up process is successful",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:423623856894:function:api_handler/invocations",
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
+          },
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "options": {
+        "summary": "CORS Preflight Request",
+        "description": "Handles CORS preflight requests for this endpoint, allowing cross-origin access.",
+        "responses": {
+          "200": {
+            "description": "CORS headers successfully returned.",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
