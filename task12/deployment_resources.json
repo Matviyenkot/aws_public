@@ -145,5 +145,14 @@
       "index_document": "index.html",
       "error_document": "error.html"
     }
+  },
+  "api_handler-role": {
+    "predefined_policies": [],
+    "principal_service": "lambda",
+    "custom_policies": [
+      "lambda-basic-execution"
+    ],
+    "resource_type": "iam_role",
+    "tags": {}
   }
 }
