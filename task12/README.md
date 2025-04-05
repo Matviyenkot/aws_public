@@ -1,4 +1,4 @@
-# task12
+# task11
 
 High level project overview - business value it brings, non-detailed technical overview.
 
@@ -9,7 +9,7 @@ version, or a range of versions of the software.
 
 ## task11 diagram
 
-![task12](pics/task11_diagram.png)
+![task11](pics/task11_diagram.png)
 
 ## Lambdas descriptions
 
